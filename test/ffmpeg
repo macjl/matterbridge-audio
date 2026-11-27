@@ -1,0 +1,10 @@
+#!/bin/bash
+set -eu
+args=("$@")
+file="/test/captures/$(date +%s%N)-$$.pcm"
+printf '%s\n' "$file" >> /test/captures/files.log
+for ((i=0; i<${#args[@]}; i++)); do
+  if [ "${args[$i]}" = '-af' ]; then args[$((i+1))]+=",arealtime"; fi
+done
+# Only the ALSA sink is replaced. Exec preserves FFmpeg's signal handling for Pause/Stop.
+exec /usr/bin/ffmpeg "${args[@]:0:${#args[@]}-3}" -f s16le -ac 1 -y "$file"
