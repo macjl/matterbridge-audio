@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { Player, defaults } from '/usr/local/lib/node_modules/matterbridge-audio-poc/player.js';
+import { Player, defaults } from '/usr/local/lib/node_modules/matterbridge-securitysystem-audio/player.js';
 
 const unavailable = new Player({ ...defaults, device: 'invalid_audio_device' });
 await assert.rejects(unavailable.play(), /Unknown PCM|audio|ALSA|Invalid/i);

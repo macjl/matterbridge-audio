@@ -26,5 +26,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: docker build -t matterbridge-audio:local .
+      - run: docker build -t matterbridge-securitysystem-audio:local .
       - run: bash test/run.sh

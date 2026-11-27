@@ -1,6 +1,6 @@
 services:
   matterbridge:
-    image: matterbridge-audio:local
+    image: matterbridge-securitysystem-audio:local
     build: .
     network_mode: host
     restart: unless-stopped

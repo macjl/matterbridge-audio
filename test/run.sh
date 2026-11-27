@@ -1,7 +1,7 @@
 #!/bin/bash
 set -Eeuo pipefail
 project=$(cd "$(dirname "$0")/.." && pwd)
-image=${AUDIO_TEST_IMAGE:-matterbridge-audio:local}
+image=${AUDIO_TEST_IMAGE:-matterbridge-securitysystem-audio:local}
 test_dir=$(mktemp -d /tmp/mb-media-playback.XXXXXX)
 test_container=mb-media-playback-test
 mkdir -p "$test_dir/captures" "$test_dir/bin" "$test_dir/data"

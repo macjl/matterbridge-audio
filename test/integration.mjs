@@ -5,7 +5,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { Environment, ControllerBehavior, ServerNode, Logger, LogLevel } from 'matterbridge/matter';
 import { BridgedDeviceBasicInformationClient, MediaPlaybackClient, LevelControlClient, OnOffClient, DescriptorClient } from 'matterbridge/matter/behaviors';
 
-const url = 'http://127.0.0.1:46104/plugins/matterbridge-audio-poc/';
+const url = 'http://127.0.0.1:46104/plugins/matterbridge-securitysystem-audio/';
 Logger.level = LogLevel.ERROR;
 async function api(action, fields = {}) {
   const send = () => fetch(url + 'api/' + action, {

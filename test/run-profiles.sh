@@ -1,7 +1,7 @@
 #!/bin/bash
 set -Eeuo pipefail
 project=$(cd "$(dirname "$0")/.." && pwd)
-image=${AUDIO_TEST_IMAGE:-matterbridge-stack:local}
+image=${AUDIO_TEST_IMAGE:-matterbridge-securitysystem-stack:local}
 task=$(mktemp -d /tmp/mb-profiles-test.XXXXXX)
 container=mb-audio-profiles-test
 mkdir -p "$task/bin" "$task/captures" "$task/data"

@@ -1,6 +1,6 @@
 {
-  "name": "matterbridge-audio-poc",
-  "version": "0.3.0-alpha.1",
+  "name": "matterbridge-securitysystem-audio",
+  "version": "0.3.0-alpha.2",
   "description": "Local audio player controlled through Matter Media Playback",
   "type": "module",
   "main": "index.js",
@@ -18,13 +18,13 @@
   },
   "author": "Jean-Laurent Girod (macjl)",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/macjl/matterbridge-audio#readme",
+  "homepage": "https://github.com/macjl/matterbridge-securitysystem-audio#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/macjl/matterbridge-audio.git"
+    "url": "git+https://github.com/macjl/matterbridge-securitysystem-audio.git"
   },
   "bugs": {
-    "url": "https://github.com/macjl/matterbridge-audio/issues"
+    "url": "https://github.com/macjl/matterbridge-securitysystem-audio/issues"
   },
   "files": [
     "*.js",

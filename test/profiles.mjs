@@ -5,8 +5,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { ControllerBehavior, Environment, Logger, LogLevel, ServerNode } from 'matterbridge/matter';
 import { ContentLauncherClient, MediaPlaybackClient } from 'matterbridge/matter/behaviors';
 import { ContentLauncher } from 'matterbridge/matter/clusters';
-import { createRecord, readRecord, cataloguePage } from '/usr/local/lib/node_modules/matterbridge-audio-poc/profiles.js';
-import { defaults } from '/usr/local/lib/node_modules/matterbridge-audio-poc/player.js';
+import { createRecord, readRecord, cataloguePage } from '/usr/local/lib/node_modules/matterbridge-securitysystem-audio/profiles.js';
+import { defaults } from '/usr/local/lib/node_modules/matterbridge-securitysystem-audio/player.js';
 const base = 'http://127.0.0.1:45804/plugins/';
 Logger.level = LogLevel.ERROR;
 async function api(plugin, action = 'status', fields = {}) {
@@ -18,8 +18,8 @@ async function api(plugin, action = 'status', fields = {}) {
   }
   return response.json();
 }
-async function alarm(action = 'status', fields) { const r = await api('matterbridge-hybrid-poc', action, fields); assert.ifError(r.error); return r; }
-async function audio(action = 'status', fields) { const r = await api('matterbridge-audio-poc', action, fields); assert.ifError(r.error); return r; }
+async function alarm(action = 'status', fields) { const r = await api('matterbridge-securitysystem-core', action, fields); assert.ifError(r.error); return r; }
+async function audio(action = 'status', fields) { const r = await api('matterbridge-securitysystem-audio', action, fields); assert.ifError(r.error); return r; }
 async function until(fn, label, timeout = 20000) {
   const end = Date.now() + timeout;
   let error;
@@ -38,12 +38,12 @@ try {
   const migrated = readRecord({ ...defaults, volume: 60 });
   assert.equal(migrated.profiles[0].volume, 60);
   assert.equal(migrated.selectedId, 'default');
-  await until(async () => (await api('matterbridge-audio-poc').catch(() => ({}))).profiles, 'startup');
+  await until(async () => (await api('matterbridge-securitysystem-audio').catch(() => ({}))).profiles, 'startup');
   const initial = await audio();
   assert.equal(initial.state, 'stopped');
   assert.deepEqual(initial.profiles.map((p) => p.name), ['Défaut', 'Pré-armement', 'Préalarme', 'Alarme']);
-  assert.match(await (await fetch(base + 'matterbridge-audio-poc/')).text(), /Profils sonores/);
-  assert.ok((await api('matterbridge-audio-poc', 'profile', { profile: { name: 'bad' } })).error);
+  assert.match(await (await fetch(base + 'matterbridge-securitysystem-audio/')).text(), /Profils sonores/);
+  assert.ok((await api('matterbridge-securitysystem-audio', 'profile', { profile: { name: 'bad' } })).error);
   Environment.default.vars.set('path.root', mkdtempSync('/tmp/named-profiles-home-'));
   const home = await ServerNode.create(ServerNode.RootEndpointWithoutGroupcast.with(ControllerBehavior), { id: 'named-profiles-test', commissioning: { enabled: false }, network: { port: 0 } });
   nodes.push(home); await home.start();
@@ -61,7 +61,7 @@ try {
   const values = { sound: 'beep', volume: 20, loop: true, seconds: 0 };
   await audio('profile', { profile: { name: 'Préalarme essai', ...values } });
   const entry = (await audio()).profiles.at(-1);
-  assert.match((await api('matterbridge-audio-poc', 'profile', { profile: { name: ' PRÉALARME ESSAI ', ...values } })).error, /déjà/);
+  assert.match((await api('matterbridge-securitysystem-audio', 'profile', { profile: { name: ' PRÉALARME ESSAI ', ...values } })).error, /déjà/);
   await audio('profile', { profile: { name: 'Sirène essai', sound: 'alarm', volume: 40, loop: true, seconds: 1 } });
   const loud = (await audio()).profiles.at(-1);
   await alarm('status', { refreshProfiles: true });
@@ -102,7 +102,7 @@ try {
   await test(entryAction);
   assert.equal((await audio()).selectedId, entry.id);
   assert.equal((await audio()).events[0].profile, 'Préalerte renommée');
-  assert.match((await api('matterbridge-audio-poc', 'remove-profile', { id: entry.id })).error, /Arrête/);
+  assert.match((await api('matterbridge-securitysystem-audio', 'remove-profile', { id: entry.id })).error, /Arrête/);
   await test(stop);
   await audio('remove-profile', { id: entry.id });
   await test(entryAction, true);
@@ -123,7 +123,7 @@ try {
   const before = await audio();
   writeFileSync('/test/restart', '');
   await until(() => existsSync('/test/restarted'), 'restart', 30000);
-  await until(async () => (await api('matterbridge-audio-poc').catch(() => ({}))).profiles, 'restart API');
+  await until(async () => (await api('matterbridge-securitysystem-audio').catch(() => ({}))).profiles, 'restart API');
   const after = await audio();
   assert.deepEqual(after.profiles, before.profiles);
   assert.equal(after.selectedId, loud.id);
@@ -133,6 +133,6 @@ try {
   await test(alarmAction); await test(stop);
   console.log('Redémarrage : profils, sélection et numéros conservés, aucune reprise sonore, actions encore fonctionnelles.');
 } finally {
-  await api('matterbridge-audio-poc', 'stop').catch(() => {});
+  await api('matterbridge-securitysystem-audio', 'stop').catch(() => {});
   for (const node of nodes.reverse()) await node.close().catch(() => {});
 }
