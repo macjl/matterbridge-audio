@@ -5,8 +5,8 @@ image=${AUDIO_TEST_IMAGE:-matterbridge-securitysystem-audio:local}
 test_dir=$(mktemp -d /tmp/mb-media-playback.XXXXXX)
 test_container=mb-media-playback-test
 mkdir -p "$test_dir/captures" "$test_dir/bin" "$test_dir/data"
-cp "$project/test/ffmpeg" "$test_dir/bin/ffmpeg"
-chmod +x "$test_dir/bin/ffmpeg"
+cp "$project/test/ffmpeg" "$project/test/amixer" "$test_dir/bin/"
+chmod +x "$test_dir/bin/ffmpeg" "$test_dir/bin/amixer"
 cleanup() {
   sudo -n docker logs "$test_container" > "$test_dir/server.log" 2>&1 || true
   sudo -n docker rm -f "$test_container" >/dev/null 2>&1 || true

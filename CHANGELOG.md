@@ -1,16 +1,22 @@
 # Changelog
 
+## 0.3.0-alpha.3
+
+- Read and adjust the ALSA Master volume from Audio output.
+- Accept a Matter command to set Master volume before playback.
+- Offer English and French configuration interfaces based on browser language.
+
 ## 0.3.0-alpha.2
 
-- Adoption du nom `matterbridge-securitysystem-audio` sur GitHub, dans le paquet, dans Docker et dans l’interface de configuration.
-- Conservation des identifiants des accessoires et des contrôleurs Matter.
+- Adopt the package name `matterbridge-securitysystem-audio` in the repository, Docker image, and configuration interface.
+- Preserve Matter accessory and controller IDs.
 
 ## 0.3.0-alpha.1 — 2026-11-27
 
-- Première préversion du projet structurée pour GitHub, à partir du prototype local 0.2.1.
-- Interface unifiée : navigation par onglets, formulaires repliables, états vides, clavier, thèmes clair/sombre et mobile.
-- Authentification administrative native Matterbridge, sans clé supplémentaire.
-- Licence Apache-2.0, dépendances verrouillées, CI et tests reproductibles.
-- Conservation des noms techniques, identités Matter et stockage existants.
+- Prepare the first public preview from local prototype 0.2.1.
+- Standardize tabs, collapsible editors, empty states, keyboard navigation, dark mode, and mobile layouts.
+- Use native Matterbridge authentication.
+- Add the Apache-2.0 license, locked dependencies, and reproducible CI and tests.
+- Preserve technical names, Matter identities, and storage.
 
-Les versions antérieures étaient des prototypes déployés localement, sans release GitHub.
+Earlier versions were local prototypes.

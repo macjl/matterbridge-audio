@@ -47,9 +47,10 @@ if (process.env.VERIFY_RESTART) {
   console.log('Redémarrage : réglages persistés, lecteur arrêté sans reprise sonore.');
   process.exit(0);
 }
-const baseSettings = { sound: 'tone', loop: true, seconds: 0, volume: 100, muted: false, device: 'default' };
-await ok('settings', { settings: baseSettings });
-assert.match((await api('settings', { settings: { ...baseSettings, volume: 101 } })).error, /Vérifie|invalides/);
+const baseProfile = { ...initial.profiles.find(({ id }) => id === initial.selectedId), sound: 'tone', loop: true, seconds: 0, volume: 100 };
+const saveSound = (settings = {}) => ok('profile', { profile: { ...baseProfile, ...settings } });
+await saveSound();
+assert.match((await api('profile', { profile: { ...baseProfile, volume: 101 } })).error, /Vérifie|invalides/);
 Environment.default.vars.set('path.root', mkdtempSync('/tmp/audio-fixture-controller-'));
 const controller = await ServerNode.create(ServerNode.RootEndpointWithoutGroupcast.with(ControllerBehavior), {
   id: 'audio-poc-test-controller', commissioning: { enabled: false }, network: { port: 0 },
@@ -100,28 +101,24 @@ try {
   console.log('Commandes Matter réelles : Play, Pause (PCM suspendu), reprise et Stop, états souscrits.');
 
   await levels.moveToLevel({ level: 64, transitionTime: 0, optionsMask: {}, optionsOverride: {} });
-  await until(async () => (await ok('status')).settings.volume === 25, 'volume applied');
+  const audio = await ok('status');
+  assert.deepEqual(audio.outputMixer, { volume: 25, muted: false });
+  assert.equal(audio.settings.volume, 100);
   await media.play();
-  await until(() => files().length >= 2 && size(latest()) > 60000, '25% PCM');
-  const lowFile = latest();
+  await until(() => files().length >= 2 && size(latest()) > 60000, 'PCM after Master level change');
+  const playback = latest();
+  await mute.off();
+  assert.deepEqual((await ok('status')).outputMixer, { volume: 25, muted: true });
+  await mute.on();
+  assert.deepEqual((await ok('status')).outputMixer, { volume: 25, muted: false });
+  assert.equal(latest(), playback, 'mute is handled by ALSA without replacing FFmpeg');
   await media.stop();
   await state(2);
-  const ratio = rms(lowFile) / fullRms;
-  assert.ok(ratio > 0.24 && ratio < 0.26, 'real PCM gain at 25%');
-  console.log('Speaker : volume à 25 %, amplitude PCM mesurée à ' + Math.round(ratio * 100) + ' %.');
+  const ratio = rms(playback) / fullRms;
+  assert.ok(ratio > 0.98 && ratio < 1.02, 'Master acts downstream of PCM generation');
+  console.log('Speaker: ALSA output volume and mute preserve the profile and playback process.');
 
-  await media.play();
-  await mute.off();
-  await until(async () => (await ok('status')).settings.muted, 'mute');
-  await until(() => files().length >= 4 && size(latest()) > 60000, 'muted PCM');
-  const silentFile = latest();
-  await media.stop();
-  assert.equal(rms(silentFile), 0);
-  await mute.on();
-  await until(async () => !(await ok('status')).settings.muted, 'unmute');
-  console.log('Speaker : coupure du son vérifiée sur les échantillons PCM.');
-
-  await ok('settings', { settings: { ...baseSettings, sound: 'beep', volume: 25, seconds: 3 } });
+  await saveSound({ sound: 'beep', volume: 25, seconds: 3 });
   await media.play();
   await state(0);
   await state(2);
@@ -131,7 +128,7 @@ try {
   assert.ok(rms(beepFile, 1.01, 1.09) > 500);
   console.log('Bips : 100 ms de son, silence et répétition, arrêt automatique remonté en Matter.');
 
-  await ok('settings', { settings: { ...baseSettings, sound: 'beep', loop: false, volume: 25 } });
+  await saveSound({ sound: 'beep', loop: false, volume: 25 });
   await media.play();
   await state(2);
   assert.ok(size(latest()) <= 11000);
@@ -141,7 +138,7 @@ try {
   await rootPower.on();
 
   const originalCount = files().length;
-  await ok('settings', { settings: { ...baseSettings, volume: 25 } });
+  await saveSound({ volume: 25 });
   await media.play();
   await state(0);
   await media.pause();

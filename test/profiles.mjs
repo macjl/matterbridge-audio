@@ -42,7 +42,7 @@ try {
   const initial = await audio();
   assert.equal(initial.state, 'stopped');
   assert.deepEqual(initial.profiles.map((p) => p.name), ['Défaut', 'Pré-armement', 'Préalarme', 'Alarme']);
-  assert.match(await (await fetch(base + 'matterbridge-securitysystem-audio/')).text(), /Profils sonores/);
+  assert.match(await (await fetch(base + 'matterbridge-securitysystem-audio/')).text(), /id="tab-profiles"/);
   assert.ok((await api('matterbridge-securitysystem-audio', 'profile', { profile: { name: 'bad' } })).error);
   Environment.default.vars.set('path.root', mkdtempSync('/tmp/named-profiles-home-'));
   const home = await ServerNode.create(ServerNode.RootEndpointWithoutGroupcast.with(ControllerBehavior), { id: 'named-profiles-test', commissioning: { enabled: false }, network: { port: 0 } });
@@ -56,6 +56,16 @@ try {
   const self = await until(async () => (await alarm('status', { refreshProfiles: true })).peers.find((p) => p.connected && p.endpoints.some((e) => e.commands.some((c) => c.id === 'profile' && c.choices.length === 4))), 'catalogue self-pair');
   const player = self.endpoints.find((e) => e.number === initial.endpoints.player);
   assert.deepEqual(player.commands.find((c) => c.id === 'profile').choices.map((p) => p.label), initial.profiles.map((p) => p.name));
+  assert.equal(player.commands.some((c) => c.id === 'master-volume'), false);
+  const speaker = self.endpoints.find((e) => e.number === initial.endpoints.speaker);
+  assert.deepEqual(speaker.commands.find((c) => c.id === 'volume'), { id: 'volume', label: 'Volume (%)', min: 0, max: 100 });
+  assert.deepEqual(initial.outputMixer, { volume: 0, muted: true });
+  const legacyVolume = await endpoint.commandsOf(ContentLauncherClient).launchContent({
+    search: { parameterList: [{ type: ContentLauncher.Parameter.Any, value: '45' }] },
+    autoPlay: false, data: 'audio-master-volume.v1',
+  });
+  assert.equal(legacyVolume.status, ContentLauncher.Status.Success);
+  assert.deepEqual((await audio()).outputMixer, { volume: 45, muted: false });
   assert.equal((await audio()).state, 'stopped');
   assert.equal(files().length, 0, 'catalogue discovery is silent');
   const values = { sound: 'beep', volume: 20, loop: true, seconds: 0 };
@@ -68,7 +78,11 @@ try {
   const op = (id) => ({ peer: self.id, endpoint: player.number, command: 'profile', value: id });
   const action = async (name, operations) => (await alarm('action', { name, operations })).alarm.actions.at(-1);
   const entryAction = await action('Profil préalarme', [op(entry.id)]);
-  const alarmAction = await action('Profil alarme', [op(loud.id)]);
+  const outputOp = { peer: self.id, endpoint: speaker.number, command: 'volume', value: 100 };
+  assert.match((await api('matterbridge-securitysystem-core', 'action', {
+    name: 'Volume invalide', operations: [{ ...outputOp, value: 101 }],
+  })).error, /valeurs/);
+  const alarmAction = await action('Profil alarme', [outputOp, op(loud.id)]);
   const stop = await action('Couper le lecteur', [{ peer: self.id, endpoint: player.number, command: 'stop' }]);
   async function test(item, fail = false) {
     const at = Date.now(); await alarm('test-action', { id: item.id });
@@ -83,8 +97,12 @@ try {
   assert.equal((await audio()).selectedId, entry.id);
   assert.equal((await audio()).settings.volume, 20);
   await test(alarmAction);
-  assert.equal((await audio()).selectedId, loud.id);
-  assert.equal((await audio()).settings.volume, 40);
+  const loudState = await audio();
+  assert.equal(loudState.selectedId, loud.id);
+  assert.equal(loudState.settings.volume, 40);
+  assert.deepEqual(loudState.outputMixer, { volume: 100, muted: false });
+  assert.deepEqual(loudState.events.slice(0, 2).map(({ command, origin }) => [command, origin]),
+    [['ContentLauncher.PlayProfile', 'matter'], ['Master.Volume', 'matter']]);
   await until(async () => (await audio()).state === 'stopped', 'alarm natural end');
   const size = statSync(beep).size; await delay(250); assert.equal(statSync(beep).size, size, 'previous profile terminated');
   assert.ok(rms(beep, .01, .09) > 450); assert.equal(rms(beep, .2, .8), 0);

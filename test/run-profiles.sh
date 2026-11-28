@@ -5,8 +5,8 @@ image=${AUDIO_TEST_IMAGE:-matterbridge-securitysystem-stack:local}
 task=$(mktemp -d /tmp/mb-profiles-test.XXXXXX)
 container=mb-audio-profiles-test
 mkdir -p "$task/bin" "$task/captures" "$task/data"
-cp "$project/test/ffmpeg" "$task/bin/ffmpeg"
-chmod +x "$task/bin/ffmpeg"
+cp "$project/test/ffmpeg" "$project/test/amixer" "$task/bin/"
+chmod +x "$task/bin/ffmpeg" "$task/bin/amixer"
 cleanup() {
   sudo -n docker logs "$container" > "$task/server.log" 2>&1 || true
   sudo -n docker rm -f "$container" >/dev/null 2>&1 || true

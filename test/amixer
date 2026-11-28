@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+
+[[ "$1" == -M && "$2" == -D && "$3" == default && "$5" == Master ]]
+file=/test/master-volume
+volume=0
+mode=mute
+if [[ -f "$file" ]]; then read -r volume mode < "$file"; fi
+if [[ "$4" == sset ]]; then
+  [[ "$6" == playback ]]
+  if [[ "$7" =~ ^(100|[1-9]?[0-9])%$ ]]; then
+    volume=${7%%%}
+    mode=$8
+  else
+    mode=$7
+  fi
+  [[ "$mode" == mute || "$mode" == unmute ]]
+  printf '%s %s\n' "$volume" "$mode" > "$file"
+fi
+switch=off
+if [[ "$mode" == unmute ]]; then switch=on; fi
+printf '  Mono: Playback %s [%s%%] [%s]\n' "$volume" "$volume" "$switch"

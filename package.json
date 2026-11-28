@@ -1,6 +1,6 @@
 {
   "name": "matterbridge-securitysystem-audio",
-  "version": "0.3.0-alpha.2",
+  "version": "0.3.0-alpha.3",
   "description": "Local audio player controlled through Matter Media Playback",
   "type": "module",
   "main": "index.js",
